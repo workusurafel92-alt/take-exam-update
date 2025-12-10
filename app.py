@@ -26,7 +26,7 @@ STUDENT_SUB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stu
 # -----------------------------
 app = Flask(__name__)
 app.secret_key = "super_secret_key_123456789"
-app.permanent_session_lifetime = timedelta(minutes=10)
+app.permanent_session_lifetime = timedelta(days=7)
 #os files
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -761,9 +761,13 @@ def logout():
 # Start background cleaner
 cleaner_thread = threading.Thread(target=delete_old_exams, daemon=True)
 cleaner_thread.start()
-
+#when some one login it save for many times 
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
