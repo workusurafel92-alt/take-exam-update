@@ -255,7 +255,7 @@ def callback_google():
             "https://www.googleapis.com/auth/userinfo.email",
             "openid"
         ],
-        redirect_uri="http://127.0.0.1:5000/callback-google"
+        redirect_uri="https://take-exam-update-1.onrender.com/callback-google"
     )
     flow.fetch_token(authorization_response=request.url)
     credentials = flow.credentials
@@ -765,4 +765,5 @@ cleaner_thread.start()
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
