@@ -31,9 +31,9 @@ app.permanent_session_lifetime = timedelta(minutes=10)
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 #jsons
-GOOGLE_CLIENT_ID = "982912830027-eov3kqqo1p8uquvenb7mchnj8uasghf0.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "709082344894-dlg893fucdfprg4q1b8qq0j1puj4ia5d.apps.googleusercontent.com"
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CLIENT_SECRET_FILE = os.path.join(CURRENT_DIR, "client_secret.json")
+CLIENT_SECRET_FILE = os.path.join(CURRENT_DIR, "surafelcheck.json")
 ACCOUNTS_FILE = os.path.join(CURRENT_DIR, "accounts.json")
 EXAMS_FILE = os.path.join(CURRENT_DIR, "hosted_exams.json")
 STUDENT_SUB_FILE = os.path.join(CURRENT_DIR, "student_submissions")
@@ -237,7 +237,7 @@ def login_google():
             "https://www.googleapis.com/auth/userinfo.email",
             "openid"
         ],
-        redirect_uri="http://127.0.0.1:5000/callback-google"
+        redirect_uri="https://take-exam-update-1.onrender.com/callback-google"
     )
     authorization_url, state = flow.authorization_url(prompt="consent")
     session["state"] = state
@@ -765,3 +765,4 @@ cleaner_thread.start()
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
