@@ -47,6 +47,9 @@ button:hover {
   font-weight: bold;
   margin-top: 10px;
 }
+#selectAllSectionsBtn {
+  background: #2ecc71;
+}
 </style>
 </head>
 <body>
@@ -89,11 +92,15 @@ button:hover {
   <label>Select Section:</label>
   <select id="section">
     <option value="">Select Section</option>
-    <option>A</option>
-    <option>B</option>
-    <option>C</option>
-    <option>D</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+    <option value="ALL">All Sections</option>
   </select>
+
+  <!-- Optional: button for convenience, you can keep it or remove -->
+  <button id="selectAllSectionsBtn">Select All Sections</button>
 
   <button onclick="hostExam()">Host Exam</button>
   <div id="message"></div>
@@ -107,14 +114,21 @@ document.getElementById('pwSubmit').addEventListener('click',function(){
   if(val==='surafel1212'){
     document.getElementById('pwOverlay').style.display='none';
     document.getElementById('mainContent').style.display='block';
-    document.getElementById('deleteAllExamsBtn').style.display='block'; // show delete button
+    document.getElementById('deleteAllExamsBtn').style.display='block';
   }else{
     document.getElementById('pwError').textContent='Incorrect password! Try again.';
     document.getElementById('pwInput').value='';
     document.getElementById('pwInput').focus();
   }
 });
-document.getElementById('pwInput').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('pwSubmit').click();});
+document.getElementById('pwInput').addEventListener('keypress',function(e){
+  if(e.key==='Enter') document.getElementById('pwSubmit').click();
+});
+
+// Select All Sections button
+document.getElementById("selectAllSectionsBtn").addEventListener("click", function() {
+  document.getElementById("section").value = "ALL";
+});
 
 // Host exam
 async function hostExam() {
@@ -124,26 +138,33 @@ async function hostExam() {
   const message = document.getElementById('message');
 
   if (!fileInput.files[0]) return alert("Please choose an exam JSON file!");
-  if (!grade || !section) return alert("Please select grade and section!");
+  if (!grade) return alert("Please select grade!");
+  if (!section) return alert("Please select section!");
 
   const reader = new FileReader();
   reader.onload = async function(e) {
     try {
       const examData = JSON.parse(e.target.result);
-      const res = await fetch('/api/host_exam', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exam: examData, grade, section })
-      });
-      const result = await res.json();
-      if (result.success) {
-        message.style.color = 'green';
-        message.textContent = "✅ Exam hosted successfully!";
-        fileInput.value = '';
-      } else {
-        message.style.color = 'red';
-        message.textContent = "❌ Error: " + result.message;
+
+      const sectionsToSend = section === "ALL" ? ["A","B","C","D"] : [section];
+
+      for (let sec of sectionsToSend) {
+        const res = await fetch('/api/host_exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ exam: examData, grade, section: sec })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          message.style.color = 'red';
+          message.textContent = "❌ Error: " + result.message;
+          return;
+        }
       }
+
+      message.style.color = 'green';
+      message.textContent = "✅ Exam hosted successfully for " + sectionsToSend.join(", ") + "!";
+      fileInput.value = '';
     } catch (err) {
       message.style.color = 'red';
       message.textContent = "❌ Invalid JSON file!";
