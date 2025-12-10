@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Run Exam</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f0f3f7;
+  margin: 0;
+  padding: 0;
+}
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+h2 { text-align: center; color: #333; }
+.question {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+  background: #fafafa;
+}
+button {
+  background: #2ecc71;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+button:hover { background: #27ae60; }
+.timer {
+  color: #e74c3c;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.banned {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Take your Exam</h2>
+  <h3 id="studentName">Name: {{ name }}</h3>
+  <h4>Instraction: Choose the best answer and do don't switch another tab.</h4>
+  <div class="timer" id="timer"></div>
+  <div id="examArea"></div>
+  <button id="submitBtn" style="display:none;" onclick="submitExam()">Submit</button>
+  <div id="result"></div>
+</div>
+
+<script>
+let exam = null;
+let timeLeft = 0, timerInterval;
+let banned = false, submitted = false;
+let examsList = []; // store all exams for this student
+
+// Get student name from rendered template
+const studentName = document.getElementById("studentName").textContent.replace("Name: ", "");
+
+// Automatically load exam for student
+async function loadExam() {
+  try {
+    const studentRes = await fetch('/api/student_info');
+    const student = await studentRes.json();
+    if (!student.grade || !student.section) {
+      alert("Please complete your profile to receive exams!");
+      return;
+    }
+
+    const res = await fetch(`/api/get_exam?grade=${student.grade}&section=${student.section}`);
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      document.getElementById('examArea').innerHTML = `<p style="text-align:center;">No exam available for your grade and section.</p>`;
+      return;
+    }
+
+    examsList = data;
+
+    // Pick the latest uploaded exam automatically
+    exam = examsList[examsList.length - 1];
+
+    startExam();
+  } catch (err) {
+    console.error(err);
+    alert("Error loading exam!");
+  }
+}
+
+function startExam() {
+  examArea.innerHTML = `<h3>${exam.title}</h3>`;
+  exam.questions.forEach((q, i) => {
+    let html = `<div class='question'><b>Q${i+1}. ${q.text}</b><br>`;
+    ['A','B','C','D'].forEach((opt, j) => {
+      html += `<label><input type='radio' name='q${i}' value='${opt}'> ${opt}) ${q.options[j]}</label><br>`;
+    });
+    html += `</div>`;
+    examArea.innerHTML += html;
+  });
+  submitBtn.style.display = "inline-block";
+  startTimer(exam.time * 60);
+  document.title = exam.title;
+
+  // anti-cheat: detect tab switch
+  document.addEventListener('visibilitychange', () => {
+    if (!submitted && document.hidden) {
+      banned = true;
+      alert("🚫 You switched tabs. You are banned!");
+      clearInterval(timerInterval);
+      document.body.innerHTML = "<div class='banned'>❌ You are banned for switching tabs!</div>";
+    }
+  });
+}
+
+function startTimer(seconds) {
+  timeLeft = seconds;
+
+  timerInterval = setInterval(() => {
+    let m = Math.floor(timeLeft / 60);
+    let s = timeLeft % 60;
+
+    timer.textContent = `⏱ Time left: ${m}:${s.toString().padStart(2, '0')}`;
+
+    // decrease time first
+    timeLeft--;
+
+    // AUTO SUBMIT + SHOW TEXT
+    if (timeLeft < 0) {
+      clearInterval(timerInterval);
+
+      // auto click the submit button
+      document.getElementById("submitBtn").click();
+
+      // show message
+      alert("⏳ Time is up! Your exam has been auto-submitted.");
+    }
+  }, 1000);
+}
+
+
+function submitExam() {
+  if (banned || submitted) return;
+  submitted = true;
+  clearInterval(timerInterval);
+
+  let score = 0;
+  exam.questions.forEach((q, i) => {
+    const ans = document.querySelector(`input[name='q${i}']:checked`);
+    if (ans && ans.value === q.correct) score++;
+  });
+
+  const total = exam.questions.length;
+  const percentage = Math.round((score / total) * 100);
+
+  examArea.innerHTML = '';
+  submitBtn.style.display = "none";
+  timer.textContent = '';
+  result.innerHTML = `
+    <h3>✅ Exam Finished, Good luck {{ name }}</h3>
+    <p>Your score: <b>${score}</b> / ${total}</p>
+    <p>Percentage: <b>${percentage}%</b></p>
+  `;
+
+  // Save result for this student (all exams)
+  fetch('/api/save_result', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      studentName: studentName, // <-- now uses JS variable
+      exam: exam.title,
+      score: score,
+      total: total,
+      percentage: percentage
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) console.error("Error saving result:", data.message);
+  })
+  .catch(err => console.error(err));
+}
+
+// Call automatically on page load
+window.onload = loadExam;
+</script>
+</body>
+</html>

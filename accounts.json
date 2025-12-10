@@ -1,0 +1,107 @@
+[
+    {
+        "id": 2,
+        "name": "Surafel Worku",
+        "email": "surafelworku05@gmail.com",
+        "password": "",
+        "login_type": "google",
+        "picture": "https://lh3.googleusercontent.com/a/ACg8ocKdAP2L58mcuAz_obn7fUt887OMj_fkB81gW83im226-PM2OaA=s96-c",
+        "grade": "11",
+        "section": "B",
+        "phone": "900955977",
+        "gender": "",
+        "verified": true
+    },
+    {
+        "id": 3,
+        "name": "surafel worku",
+        "email": "surafelworku357@gmail.com",
+        "password": "",
+        "login_type": "google",
+        "picture": "https://lh3.googleusercontent.com/a/ACg8ocJklXNn7TTt5Xg8NT6nyAlFuGV9vZLutDlVFM4UaTIoG-rZVg=s96-c",
+        "grade": "12",
+        "section": "A",
+        "phone": "900955977",
+        "gender": "",
+        "verified": true
+    },
+    {
+        "id": 5,
+        "name": "Surafel Worku",
+        "email": "surafelw97@gmail.com",
+        "password": "",
+        "login_type": "google",
+        "picture": "https://lh3.googleusercontent.com/a/ACg8ocLap141QVRNCQjbmZmR3j6KvKXDIylhFl4MpzDNDYpKOh-ZHg=s96-c",
+        "verified": true
+    },
+    {
+        "id": 6,
+        "name": "Worku Surafel",
+        "email": "surafelworku550@gmail.com",
+        "password": "",
+        "login_type": "google",
+        "picture": "https://lh3.googleusercontent.com/a/ACg8ocLRuC4QRdo4KskaNQtmncVUr21HED4GVbAO2WuVsr-AKBi2S84=s96-c",
+        "verified": true,
+        "grade": "11",
+        "section": "A",
+        "phone": "+251900955977",
+        "gender": ""
+    },
+    {
+        "id": 7,
+        "name": "Sofoniyas Worku",
+        "email": "surafelworku990@gmail.com",
+        "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+        "login_type": "email",
+        "picture": "",
+        "verified": true
+    },
+    {
+        "id": 8,
+        "name": "Workalm Tadele",
+        "email": "workalmtadele@gmail.com",
+        "password": "",
+        "login_type": "google",
+        "picture": "https://lh3.googleusercontent.com/a/ACg8ocKDqr-MEQqv49Am_C-dQUAfrN-zRz8eKU6r7Imk2ja1H1t3gw=s96-c",
+        "verified": true,
+        "grade": "11",
+        "section": "B",
+        "phone": "+251918058992",
+        "gender": ""
+    },
+    {
+        "id": 9,
+        "name": "surafel",
+        "email": "surafelis@gmail.com",
+        "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+        "login_type": "email",
+        "picture": "",
+        "verified": true
+    },
+    {
+        "id": 10,
+        "name": "sofoniyas worku",
+        "email": "surafeliss@gmail.com",
+        "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+        "login_type": "email",
+        "picture": "",
+        "verified": true,
+        "grade": "11",
+        "section": "B",
+        "phone": "911111111",
+        "gender": ""
+    },
+    {
+        "id": 11,
+        "name": "surafel worku",
+        "email": "sura@gmail.com",
+        "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+        "login_type": "email",
+        "picture": "",
+        "verified": false,
+        "grade": "11",
+        "section": "D",
+        "phone": "+251900955977",
+        "gender": ""
+    }
+]

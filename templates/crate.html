@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Exam</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f0f3f7;
+  margin: 0;
+  padding: 0;
+}
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+h2, h3 { text-align: center; color: #333; }
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+button {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  margin-top: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+button:hover { background: #2980b9; }
+.question-box {
+  border: 1px solid #ddd;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  background: #fafafa;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>📘 Create Exam</h2>
+  <label>Exam Title:</label>
+  <input id="examTitle" placeholder="e.g. English Grade 10 Quiz">
+
+  <label>Countdown (minutes):</label>
+  <input id="examTime" type="number" min="1" value="5">
+
+  <h3>Add Question</h3>
+  <textarea id="question" placeholder="Enter question here..." rows="2"></textarea>
+  <input id="optA" placeholder="Option A">
+  <input id="optB" placeholder="Option B">
+  <input id="optC" placeholder="Option C">
+  <input id="optD" placeholder="Option D">
+  <label>Correct Answer:</label>
+  <select id="correct">
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+  </select>
+  <button onclick="addQuestion()">Add Question</button>
+
+  <h3>Questions</h3>
+  <div id="questionsList"></div>
+  <hr>
+  <button onclick="downloadExam()">💾 Download Exam JSON</button>
+</div>
+
+<script>
+let questions = [];
+
+function addQuestion() {
+  const q = {
+    text: question.value.trim(),
+    options: [optA.value, optB.value, optC.value, optD.value],
+    correct: correct.value
+  };
+  if (!q.text || q.options.some(o => !o)) return alert("Please fill all fields!");
+  questions.push(q);
+  questionsList.innerHTML += `
+    <div class="question-box">
+      <b>${q.text}</b><br>
+      A) ${q.options[0]}<br>
+      B) ${q.options[1]}<br>
+      C) ${q.options[2]}<br>
+      D) ${q.options[3]}<br>
+      <i>✔ Correct: ${q.correct}</i>
+    </div>`;
+  question.value = optA.value = optB.value = optC.value = optD.value = "";
+}
+
+function downloadExam() {
+  if (!examTitle.value.trim() || questions.length === 0)
+    return alert("Add exam title and at least one question!");
+  const exam = { title: examTitle.value.trim(), time: Number(examTime.value), questions };
+  const blob = new Blob([JSON.stringify(exam, null, 2)], {type: "application/json"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = examTitle.value.replace(/\s+/g, "_") + ".json";
+  link.click();
+}
+</script>
+</body>
+</html>

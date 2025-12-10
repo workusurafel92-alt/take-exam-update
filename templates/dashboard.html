@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #eef2f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #4a90e2, #357ABD);
+      color: white;
+      padding: 25px 20px;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 { margin: 0; }
+
+    .profile-container {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .profile-container img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid white;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .profile-container img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+
+    #examNotification {
+      position:absolute;
+      top:0;
+      right:0;
+      background:red;
+      color:white;
+      font-size:12px;
+      border-radius:50%;
+      width:18px;
+      height:18px;
+      display:none;
+      justify-content:center;
+      align-items:center;
+      font-weight:bold;
+    }
+
+    .info-box {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 70px;
+      background: white;
+      color: #333;
+      padding: 12px 15px;
+      border-radius: 80px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      width: 259px;
+      text-align: left;
+      z-index: 10;
+    }
+
+    .info-box p { margin: 6px 0; font-size: 0.55em; }
+
+    .info-box a.logout {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 18px;
+      background: #e74c3c;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.65em;
+      transition: background 0.2s;
+    }
+
+    .info-box a.logout:hover { background: #c0392b; }
+
+    #extraInfoForm { margin-top: 10px; font-size: 0.7em; }
+
+    #extraInfoForm input,
+    #extraInfoForm select {
+      width: 100%;
+      padding: 4px;
+      margin-top: 3px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4a90e2;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.4s, transform 0.4s;
+      z-index: 10000;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    #extraInfoForm button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    #extraInfoForm button:hover { background: #357ABD; }
+
+    .highlight-card {
+      animation: glow 1s infinite alternate;
+      box-shadow: 0 0 15px red;
+    }
+
+    @keyframes glow {
+      from { transform: scale(1); }
+      to { transform: scale(1.02); }
+    }
+
+    /* Countdown Style */
+    .countdown {
+      color: red;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .disabled-btn {
+      background: gray !important;
+      cursor: not-allowed !important;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Welcome, {{ name }}</h1>
+
+    <div class="profile-container" onclick="toggleInfo()" style="position: relative;">
+      <img src="{{ picture }}" alt="Profile Picture">
+      <span id="examNotification">!</span>
+      <div class="info-box" id="infoBox" onclick="event.stopPropagation()">
+        <p><strong>Full Name:</strong> {{ name }} {% if verified %}✅{% endif %}</p>
+        <p><strong>Email:</strong> {{ email }}</p>
+        <p><strong>Login Type:</strong> {{ login_type }}</p>
+        
+
+        <form id="extraInfoForm" onsubmit="saveExtraInfo(event)">
+          <label><strong>Grade:</strong></label><br>
+          <select id="grade" required {% if grade %}disabled{% endif %}>
+            <option value="">Select</option>
+            <option value="9" {% if grade=="9" %}selected{% endif %}>9</option>
+            <option value="10" {% if grade=="10" %}selected{% endif %}>10</option>
+            <option value="11" {% if grade=="11" %}selected{% endif %}>11</option>
+            <option value="12" {% if grade=="12" %}selected{% endif %}>12</option>
+          </select>
+
+          <label><strong>Section:</strong></label><br>
+          <select id="section" required {% if section %}disabled{% endif %}>
+            <option value="">Select</option>
+            <option value="A" {% if section=="A" %}selected{% endif %}>A</option>
+            <option value="B" {% if section=="B" %}selected{% endif %}>B</option>
+            <option value="C" {% if section=="C" %}selected{% endif %}>C</option>
+            <option value="D" {% if section=="D" %}selected{% endif %}>D</option>
+          </select>
+
+          <label><strong>Phone (starts with 251):</strong></label><br>
+          <input type="text" id="phone" placeholder="251..." value="{{ phone }}" {% if phone %}readonly{% endif %} required>
+          <label><strong>Class Roll No:</strong></label><br>
+          <input type="number" id="roll" placeholder="Enter roll number" value="{{ roll }}" {% if roll %}readonly{% endif %} required>
+          <button type="submit" id="saveBtn" {% if grade or section or phone or roll %}disabled{% endif %}>Save</button>
+        </form>
+
+        <a href="/logout" class="logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="max-width:700px; margin:20px auto;">
+    <h2>📚 Available Exams</h2>
+    <div id="examsList">
+      <p>Loading exams...</p>
+    </div>
+  </div>
+
+<script>
+  let previousExams = [];
+  let startedExams = JSON.parse(localStorage.getItem('startedExams') || '[]');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const email = "{{ email }}";
+    let user = null;
+
+    fetch('/api/accounts')
+      .then(res => res.json())
+      .then(accounts => {
+        user = accounts.find(a => a.email === email);
+        if (!user) return;
+
+        if (user.grade) document.getElementById("grade").value = user.grade;
+        if (user.section) document.getElementById("section").value = user.section;
+        if (user.phone) document.getElementById("phone").value = user.phone;
+        if (user.roll) document.getElementById("roll").value = user.roll;
+
+        ["grade","section","phone","roll"].forEach(id => {
+          if (document.getElementById(id).value) document.getElementById(id).disabled = true;
+        });
+        if (user.grade && user.section && user.phone && user.roll)
+          document.querySelector("#extraInfoForm button").disabled = true;
+
+        function showToast(message) {
+          const toast = document.createElement('div');
+          toast.className = 'toast';
+          toast.innerText = message;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.classList.add('show'), 100);
+          setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+          }, 3000);
+        }
+
+        function loadExams() {
+          if (!user || !user.grade || !user.section) return;
+
+          fetch(`/api/get_exam?grade=${user.grade}&section=${user.section}`)
+            .then(res => res.json())
+            .then(exams => {
+              if (!Array.isArray(exams)) return;
+
+              const newExams = exams.filter(e => !previousExams.some(pe => pe.title === e.title));
+              if (newExams.length > 0 && previousExams.length > 0) {
+                newExams.forEach(e => showToast(`📢 New Exam Uploaded: ${e.title}`));
+                document.getElementById("examNotification").style.display = "flex";
+                document.querySelector(".container").classList.add("highlight-card");
+              }
+
+              previousExams = exams;
+              window.studentExams = exams;
+
+              const examsList = document.getElementById('examsList');
+              examsList.innerHTML = '';
+              if (exams.length === 0) {
+                examsList.innerHTML = '<p>No exams available for your grade and section.</p>';
+                return;
+              }
+
+              exams.forEach((exam, idx) => {
+                const div = document.createElement('div');
+                div.style.border = '1px solid #ccc';
+                div.style.padding = '10px';
+                div.style.margin = '6px 0';
+                div.style.borderRadius = '6px';
+
+                let startTime = new Date(exam.uploaded_at || Date.now()).getTime();
+                let closeTime = startTime + 5 * 60 * 1000; // 5 minutes
+                let now = Date.now();
+                let timeLeft = Math.max(0, closeTime - now);
+
+                let alreadyStarted = startedExams.includes(exam.title);
+                let buttonHTML = '';
+
+                if (timeLeft <= 0) {
+                  buttonHTML = `<button class="disabled-btn" disabled>Exam Closed</button>`;
+                } else if (alreadyStarted) {
+                  buttonHTML = `<button class="disabled-btn" disabled>Already Started</button>`;
+                } else {
+                  buttonHTML = `<button onclick='startExam(${idx})'>Start Exam</button>`;
+                }
+
+                div.innerHTML = `
+                  <b>${exam.title}</b><br>
+                  <span>Time: ${exam.time} min</span><br>
+                  <span class="countdown" id="cd${idx}"></span><br>
+                  ${buttonHTML}
+                `;
+                examsList.appendChild(div);
+
+                if (timeLeft > 0) {
+                  const countdownEl = document.getElementById(`cd${idx}`);
+                  const interval = setInterval(() => {
+                    let left = closeTime - Date.now();
+                    if (left <= 0) {
+                      clearInterval(interval);
+                      countdownEl.textContent = "Exam Closed!";
+                      div.querySelector('button').outerHTML = `<button class='disabled-btn' disabled>Exam Closed</button>`;
+                    } else {
+                      let m = Math.floor(left / 60000);
+                      let s = Math.floor((left % 60000) / 1000);
+                      countdownEl.textContent = `Closes in ${m}m ${s}s`;
+                    }
+                  }, 1000);
+                }
+              });
+            })
+            .catch(err => console.error("Error loading exams:", err));
+        }
+
+        loadExams();
+        setInterval(loadExams, 10000);
+
+        document.querySelector(".container").addEventListener("click", () => {
+          document.getElementById("examNotification").style.display = "none";
+          document.querySelector(".container").classList.remove("highlight-card");
+        });
+      });
+  });
+
+  function startExam(index) {
+   const exam = window.studentExams[index];
+   if (!exam) return;
+
+   // Load or initialize started exams list
+   let startedExams = JSON.parse(localStorage.getItem('startedExams')) || [];
+
+   // Check if exam already started
+   if (startedExams.includes(exam.title)) {
+    alert("❌ You already started this exam and cannot retake it.");
+    return;
+   }
+
+   // --- 5-minute expiration check ---
+   // (Ensure your backend sends `exam.hosted_time` as ISO datetime string)
+   if (exam.hosted_time) {
+    const hostedTime = new Date(exam.hosted_time);
+    const now = new Date();
+    const diffMinutes = (now - hostedTime) / (1000 * 60);
+    if (diffMinutes > 5) {
+      alert("⏰ This exam is closed. You can’t start after 5 minutes.");
+      return;
+    }
+
+    // Optional: Show countdown until exam closes
+    const remaining = Math.max(0, 5 - Math.floor(diffMinutes));
+    if (remaining > 0) {
+      alert(`🕒 Hurry up! This exam will close in ${remaining} minute(s).`);
+    }
+   }
+
+   // Save started exam
+   startedExams.push(exam.title);
+   localStorage.setItem('startedExams', JSON.stringify(startedExams));
+
+   // Save current exam and redirect
+   localStorage.setItem('currentExam', JSON.stringify(exam));
+   window.location.href = '/run_exam';
+  }
+
+  function saveExtraInfo(event) {
+    event.preventDefault();
+    const info = {
+      grade: document.getElementById("grade").value,
+      section: document.getElementById("section").value,
+      phone: document.getElementById("phone").value,
+      roll: document.getElementById("roll").value
+    };
+    fetch("/save_profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(info)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Saved successfully!");
+        ["grade","section","phone","roll"].forEach(id => document.getElementById(id).disabled = true);
+        document.querySelector("#extraInfoForm button").disabled = true;
+      } else {
+        alert("Error: " + data.message);
+      }
+    });
+  }
+
+  function toggleInfo() {
+    const infoBox = document.getElementById('infoBox');
+    infoBox.style.display = (infoBox.style.display === 'block') ? 'none' : 'block';
+  }
+
+  window.addEventListener('click', function(e) {
+    const profileContainer = document.querySelector('.profile-container');
+    const infoBox = document.getElementById('infoBox');
+    if (!profileContainer.contains(e.target)) {
+      infoBox.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

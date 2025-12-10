@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Exam Results</title>
+<style>
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f0f3f7;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 1000px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+h2 { text-align: center; color: #333; margin-bottom: 20px; }
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+th {
+    background: #2ecc71;
+    color: white;
+}
+tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #e0f7e7; }
+button.main-btn {
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #fff;
+}
+button.export-btn { background: #2ecc71; }
+button.delete-all-btn { background: #e74c3c; }
+</style>
+</head>
+<body>
+
+<!-- Password Overlay -->
+<div id="pwOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:9999;">
+  <div style="background:#fff;padding:30px 40px;border-radius:12px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+    <h2 style="margin-bottom:20px;font-family:'Segoe UI',sans-serif;color:#333;">Enter Password</h2>
+    <input type="password" id="pwInput" placeholder="Password" size="100" style="padding:10px;font-size:16px;border-radius:6px;border:1px solid #ccc;margin-bottom:15px;">
+    <br>
+    <button id="pwSubmit" style="padding:10px 20px;font-size:16px;border:none;border-radius:6px;background:#2ecc71;color:#fff;cursor:pointer;">Submit</button>
+    <p id="pwError" style="color:red;margin-top:10px;font-size:14px;"></p>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="mainContent" style="display:none;">
+  <!-- Buttons -->
+  <button onclick="window.location.href='/export_results'" class="main-btn export-btn">📥 Export to Excel</button>
+  <button id="deleteAllBtn" class="main-btn delete-all-btn">🗑️ Delete All Results</button>
+
+  <div class="container">
+      <h2>📊 Student Exam Results</h2>
+      <input type="text" id="searchInput" placeholder="Search by student name...">
+      <table id="resultsTable">
+          <thead>
+              <tr>
+                  <th>Student Name</th>
+                  <th>Exam Title</th>
+                  <th>Score</th>
+                  <th>Total</th>
+                  <th>Percentage</th>
+              </tr>
+          </thead>
+          <tbody>
+              <!-- Results will load here -->
+          </tbody>
+      </table>
+  </div>
+</div>
+
+<script>
+// Password script
+document.getElementById('pwSubmit').addEventListener('click', function() {
+  let val = document.getElementById('pwInput').value;
+  if(val === 'surafel1212') {
+    document.getElementById('pwOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  } else {
+    document.getElementById('pwError').textContent = 'Incorrect password! Try again.';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+});
+document.getElementById('pwInput').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') document.getElementById('pwSubmit').click();
+});
+
+// Load results from API
+async function loadResults() {
+    const tbody = document.querySelector("#resultsTable tbody");
+    tbody.innerHTML = "";
+
+    // Fetch all accounts
+    const accountsRes = await fetch('/api/accounts');
+    const accounts = await accountsRes.json();
+
+    for (const acc of accounts) {
+        const userId = acc.id;
+        try {
+            const resultRes = await fetch(`/api/student_results/${userId}`);
+            const resultData = await resultRes.json();
+            if (resultData.success) {
+                const results = resultData.results;
+                results.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${acc.name}</td>
+                        <td>${r.exam}</td>
+                        <td>${r.score}</td>
+                        <td>${r.total}</td>
+                        <td>${r.percentage}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching student result:", err);
+        }
+    }
+}
+
+// Delete All Results
+document.getElementById('deleteAllBtn').addEventListener('click', async function() {
+    if(!confirm("Are you sure you want to delete ALL student exam results? This action cannot be undone!")) return;
+
+    try {
+        const res = await fetch('/api/delete_all_results', { method: 'DELETE' });
+        const data = await res.json();
+        if(data.success){
+            alert("✅ All student exam results deleted!");
+            document.querySelector("#resultsTable tbody").innerHTML = ""; // clear table
+        } else {
+            alert("❌ Error: " + data.message);
+        }
+    } catch(err){
+        alert("❌ Error deleting results: " + err);
+    }
+});
+
+// Search filter
+document.getElementById("searchInput").addEventListener("input", function() {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll("#resultsTable tbody tr");
+    rows.forEach(row => {
+        const nameCell = row.cells[0].textContent.toLowerCase();
+        row.style.display = nameCell.includes(filter) ? "" : "none";
+    });
+});
+
+// Load results on page load
+window.onload = loadResults;
+</script>
+
+</body>
+</html>
