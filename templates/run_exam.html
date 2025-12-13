@@ -4,49 +4,76 @@
 <meta charset="UTF-8">
 <title>Run Exam</title>
 <style>
+/* Modern UI Styles */
 body {
   font-family: "Segoe UI", sans-serif;
-  background: #f0f3f7;
+  background: linear-gradient(120deg, #f0f3f7, #d9e2ec);
   margin: 0;
   padding: 0;
 }
 .container {
-  max-width: 800px;
-  margin: 30px auto;
+  max-width: 900px;
+  margin: 40px auto;
   background: #fff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 35px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  transition: transform 0.3s;
 }
-h2 { text-align: center; color: #333; }
+.container:hover {
+  transform: translateY(-5px);
+}
+h2 {
+  text-align: center;
+  color: #333;
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+h3, h4 {
+  text-align: center;
+  color: #555;
+}
 .question {
   border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 10px 0;
-  background: #fafafa;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 15px 0;
+  background: #f9f9fb;
+  transition: box-shadow 0.2s;
+}
+.question:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 button {
-  background: #2ecc71;
+  background: linear-gradient(90deg, #1abc9c, #16a085);
   color: #fff;
   border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
 }
-button:hover { background: #27ae60; }
+button:hover {
+  background: linear-gradient(90deg, #16a085, #149174);
+  transform: translateY(-2px);
+}
 .timer {
   color: #e74c3c;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 1.2em;
 }
 .banned {
   color: red;
   text-align: center;
   font-weight: bold;
-  font-size: 1.2em;
+  font-size: 1.5em;
+  padding: 50px 20px;
+  background: #ffe6e6;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 </style>
 </head>
@@ -54,7 +81,7 @@ button:hover { background: #27ae60; }
 <div class="container">
   <h2>Take your Exam</h2>
   <h3 id="studentName">Name: {{ name }}</h3>
-  <h4>Instraction: Choose the best answer and do don't switch another tab.</h4>
+  <h4>Instruction: Choose the best answer and do not switch tabs.</h4>
   <div class="timer" id="timer"></div>
   <div id="examArea"></div>
   <button id="submitBtn" style="display:none;" onclick="submitExam()">Submit</button>
@@ -62,15 +89,19 @@ button:hover { background: #27ae60; }
 </div>
 
 <script>
+// --- Redirect to /dashboard on refresh ---
+if (performance.getEntriesByType("navigation")[0].type === "reload") {
+    window.location.href = "/dashboard";
+}
+
+// --- Exam Logic ---
 let exam = null;
 let timeLeft = 0, timerInterval;
 let banned = false, submitted = false;
-let examsList = []; // store all exams for this student
+let examsList = [];
 
-// Get student name from rendered template
 const studentName = document.getElementById("studentName").textContent.replace("Name: ", "");
 
-// Automatically load exam for student
 async function loadExam() {
   try {
     const studentRes = await fetch('/api/student_info');
@@ -89,8 +120,6 @@ async function loadExam() {
     }
 
     examsList = data;
-
-    // Pick the latest uploaded exam automatically
     exam = examsList[examsList.length - 1];
 
     startExam();
@@ -114,7 +143,6 @@ function startExam() {
   startTimer(exam.time * 60);
   document.title = exam.title;
 
-  // anti-cheat: detect tab switch
   document.addEventListener('visibilitychange', () => {
     if (!submitted && document.hidden) {
       banned = true;
@@ -133,23 +161,15 @@ function startTimer(seconds) {
     let s = timeLeft % 60;
 
     timer.textContent = `⏱ Time left: ${m}:${s.toString().padStart(2, '0')}`;
-
-    // decrease time first
     timeLeft--;
 
-    // AUTO SUBMIT + SHOW TEXT
     if (timeLeft < 0) {
       clearInterval(timerInterval);
-
-      // auto click the submit button
       document.getElementById("submitBtn").click();
-
-      // show message
       alert("⏳ Time is up! Your exam has been auto-submitted.");
     }
   }, 1000);
 }
-
 
 function submitExam() {
   if (banned || submitted) return;
@@ -174,12 +194,11 @@ function submitExam() {
     <p>Percentage: <b>${percentage}%</b></p>
   `;
 
-  // Save result for this student (all exams)
   fetch('/api/save_result', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      studentName: studentName, // <-- now uses JS variable
+      studentName: studentName,
       exam: exam.title,
       score: score,
       total: total,
@@ -193,7 +212,6 @@ function submitExam() {
   .catch(err => console.error(err));
 }
 
-// Call automatically on page load
 window.onload = loadExam;
 </script>
 </body>
